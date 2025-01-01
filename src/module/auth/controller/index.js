@@ -1,18 +1,24 @@
-import { dynamoDB } from "../../../../db.js";
-import bcrypt from 'bcrypt'
+import { dynamoDB, marshall } from "../../../../db.js";
+import bcrypt from "bcrypt";
+
 export const addUser = async (_, args) => {
+  const id = Math.floor(Math.random() * 1000000 * 100).toString();
+  const item = marshall({
+    id,
+    username: args.username,
+    email: args.email,
+    password: bcrypt.hashSync(args.password, 10),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  });
   await dynamoDB
     .putItem({
       TableName: "Users",
-      Item: {
-        id: { S: Math.floor(Math.random() * 1000000).toString() },
-        username: { S: args.username },
-        email: { S: args.email },
-        password: { S: bcrypt.hashSync(args.password, 10) },
-        createdAt: { S: Date.now().toString() },
-        updatedAt: { S: Date.now().toString() },
-      },
+      Item: item,
     })
     .promise();
-  return "User added successfully!";
+  return {
+    statusCode: 201,
+    message: "User created successfully.",
+  };
 };

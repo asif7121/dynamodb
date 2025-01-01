@@ -1,5 +1,6 @@
 // Import the AWS SDK
 import AWS from "aws-sdk"; // Use "import  as" to properly import the module
+const { marshall, unmarshall } = AWS.DynamoDB.Converter;
 
 // Configure AWS SDK to connect to DynamoDB Local
 export const dynamoDB = new AWS.DynamoDB({
@@ -18,8 +19,4 @@ export const listTables = async () => {
   }
 };
 
-// Main execution
-// (async () => {
-//   console.log("Connecting to DynamoDB Local...");
-//   await listTables();
-// })();
+export {marshall, unmarshall}

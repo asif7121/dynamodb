@@ -1,4 +1,4 @@
-import { dynamoDB } from "../../../../db.js";
+import { dynamoDB, unmarshall } from "../../../../db.js";
 
 export const getAllUsers = async () => {
   try {
@@ -7,13 +7,7 @@ export const getAllUsers = async () => {
         TableName: "Users",
       })
       .promise();
-    return data.Items.map((item) => ({
-      id: item.id.S,
-      username: item.username.S,
-      email: item.email.S,
-      createdAt: item.createdAt.S,
-      updatedAt: item.updatedAt.S,
-    }));
+    return data.Items.map((item)=> unmarshall(item))
   } catch (error) {
     console.error("Error fetching users:", error);
     throw new Error("Could not fetch users");
