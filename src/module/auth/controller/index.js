@@ -8,6 +8,7 @@ export const addUser = async (_, args) => {
     username: args.username,
     email: args.email,
     password: bcrypt.hashSync(args.password, 10),
+    isActive: true,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   });

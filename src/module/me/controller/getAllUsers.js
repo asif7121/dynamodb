@@ -5,6 +5,10 @@ export const getAllUsers = async () => {
     const data = await dynamoDB
       .scan({
         TableName: "Users",
+        FilterExpression: "isActive = :isActive",
+        ExpressionAttributeValues: {
+          ":isActive": { BOOL: true }, // Filter for active users
+        },
       })
       .promise();
     return data.Items.map((item)=> unmarshall(item))
