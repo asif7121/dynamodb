@@ -1,0 +1,20 @@
+{
+  "name": "dynamodb",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon index.js || npx nodemon index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@apollo/server": "^4.11.2",
+    "aws-sdk": "^2.1692.0",
+    "bcrypt": "^5.1.1",
+    "express": "^4.21.2",
+    "graphql": "^16.10.0"
+  },
+  "type": "module"
+}
