@@ -2,6 +2,9 @@ import { addUser } from "../../module/auth/controller/index.js";
 import { getAllUsers } from "../../module/me/controller/getAllUsers.js";
 import { getUser } from "../../module/me/controller/getUser.js";
 import {
+  getAllOrders,
+  getConsumer,
+  getOrderedProducts,
   orderProducts,
 } from "../../module/order/controller/index.js";
 import {
@@ -18,7 +21,7 @@ export const resolvers = {
     getUser: getUser,
     getAllProducts: getAllProducts,
     getProduct: getProduct,
-    // getAllOrders: getAllOrders,
+    getAllOrders: getAllOrders,
   },
   Mutation: {
     addUser: addUser,
@@ -31,8 +34,15 @@ export const resolvers = {
       return data;
     },
   },
-  //   Order: {
-  //     orderedBy: () => {},
-  //     orderedItems: () => {},
-  //   },
-};
+  Order: {
+    orderedBy: async (order) => {
+      const { data } = await getConsumer(order.orderedBy);
+      return data;
+    },
+    items: async (order) => {
+      const { data } = await getOrderedProducts(order.items);
+      console.log(data);
+      return data;
+    },
+  },
+}

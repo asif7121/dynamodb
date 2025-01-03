@@ -24,8 +24,8 @@ export const typeDefs = `#graphql
   }
   type Order {
     id: ID!
-    items: [OrderedProducts!]!
-    orderedBy: String!
+    items: [Product!]!
+    orderedBy: User!
     status: OrderStatus! # Enforcing one status at a time
     createdAt: String
     updatedAt: String
@@ -52,16 +52,12 @@ export const typeDefs = `#graphql
     id: ID!
     quantity: Int!
   }
-  type OrderedProducts{
-    id: ID!
-    quantity: Int!
-  }
   type Query {
     getAllUsers: [User]
     getUser(id:String!): UserResponse
     getAllProducts: [Product]
     getProduct(id: String!): ProductResponse
-    # getAllOrders(orderedBy: String!): [Order]
+    getAllOrders(orderedBy: String!): [Order]
   }
   type Mutation {
     addUser(username: String!, email: String!, password: String!):UserResponse

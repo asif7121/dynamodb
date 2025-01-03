@@ -66,23 +66,64 @@ export const orderProducts = async (_, { products, userId }) => {
 };
 
 
-// export const getAllOrders = async ( _, { userId } ) => {
-//     try {
-//         const orders = await dynamoDB
-//           .query({
-//             TableName: "Orders",
-//             IndexName: "orderedBy", // Replace with the actual index name
-//             KeyConditionExpression: "orderedBy = :userId", // Query condition
-//             ExpressionAttributeValues: marshall({
-//               ":userId": userId, // Passing the userId as a value
-//             }),
-//           })
-//           .promise();
-//         return orders.Items.map((item)=> unmarshall(item))
-        
-//     } catch ( error ) {
-//         console.log(error);
-//         return { statusCode: 500, error: error.message };
-//     }
-// }
+export const getAllOrders = async (_, { orderedBy }) => {
+    try {
+      const orders = await dynamoDB
+        .query({
+          TableName: "Orders",
+          IndexName: "orderedBy", // Replace with the actual index name
+          KeyConditionExpression: "orderedBy = :orderedBy", // Query condition
+          ExpressionAttributeValues: marshall({
+            ":orderedBy": orderedBy, // Passing the userId as a value
+          }),
+        })
+        .promise();
+      // Check if items exist; otherwise, return an empty array
+      const result = orders.Items
+        ? orders.Items.map((item) => unmarshall(item))
+        : [];
 
+      return result; // This will ensure GraphQL gets an array
+    } catch (error) {
+    console.log(error);
+    return { statusCode: 500, error: error.message };
+  }
+};
+
+export const getConsumer = async( consumerId ) => {
+    try {
+          const consumer = await dynamoDB
+      .getItem({
+        TableName: "Users",
+        Key: marshall({ id:consumerId  }),
+      })
+      .promise();
+    return {
+      data: unmarshall(consumer.Item),
+    };
+    } catch (error) {
+           console.log(error);
+           return { statusCode: 500, error: error.message }; 
+    }
+}
+
+export const getOrderedProducts = async ( items ) => {
+    try {
+      const productsArray = await Promise.all(
+        items.map(async (item) => {
+          const product = await dynamoDB
+            .getItem({
+              TableName: "Products",
+              Key: marshall({ id: item.id }),
+            })
+            .promise();
+          return unmarshall(product.Item); // Unmarshall the product data before returning
+        })
+      );
+
+      return { data: productsArray }; // Return the array of unmarshalled product
+    } catch (error) {
+        console.log(error);
+        return { statusCode: 500, error: error.message }; 
+    }
+}

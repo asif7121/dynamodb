@@ -30,11 +30,48 @@ export const createProduct = async (_, { name, price, stock, userId }) => {
 
 export const getAllProducts = async () => {
   try {
-    const products = await dynamoDB.scan({ TableName: "Products" }).promise();
-    return products.Items.map((item) => unmarshall(item));
+    // Get table information
+    const tableDetails = await dynamoDB
+      .describeTable({ TableName: "Products" })
+      .promise();
+    const tableSizeBytes = tableDetails.Table.TableSizeBytes;
+
+    // Calculate totalSegments based on table size (1 MB per segment)
+    const segmentSizeBytes = 1 * 1024 * 1024; // 1 MB in bytes
+    const totalSegments = Math.ceil(tableSizeBytes / segmentSizeBytes);
+
+    console.log(
+      `Table size: ${tableSizeBytes} bytes, Total Segments: ${totalSegments}`
+    );
+
+    // Limit totalSegments to avoid overloading DynamoDB
+    const maxSegments = 1000; // AWS recommends a reasonable upper limit
+    const effectiveSegments = Math.min(totalSegments, maxSegments);
+
+    const scanPromises = [];
+
+    // Initiate parallel scans
+    for (let segment = 0; segment < effectiveSegments; segment++) {
+      const scanParams = {
+        TableName: "Products",
+        Segment: segment,
+        TotalSegments: effectiveSegments,
+      };
+      scanPromises.push(dynamoDB.scan(scanParams).promise());
+    }
+
+    // Resolve all parallel scan promises
+    const results = await Promise.all(scanPromises);
+
+    // Combine all items from each segment
+    const allItems = results
+      .flatMap((result) => result.Items)
+      .map((item) => unmarshall(item));
+
+    return allItems;
   } catch (error) {
     console.log(error);
-    throw new Error("Could not fetch users", error);
+    return { statusCode: 500, error: error.message };
   }
 };
 
