@@ -4,7 +4,9 @@ import { expressMiddleware } from "@apollo/server/express4";
 import { listTables } from "./db.js";
 import { typeDefs } from "./src/graphql/schema/schema.js";
 import { resolvers } from "./src/graphql/resolver/resolver.js";
-
+import dotenv from 'dotenv'
+import { context } from "./src/graphql/context/context.js";
+dotenv.config({path: './.env'})
 
 async function startServer() {
   const app = express();
@@ -12,6 +14,7 @@ async function startServer() {
   const server = new ApolloServer({
     typeDefs: typeDefs,
     resolvers: resolvers,
+    introspection: true
   });
 
   // Start the server
@@ -22,7 +25,7 @@ async function startServer() {
   app.use(
     "/graphql",
     expressMiddleware(server, {
-      //   context: async ({ req }) => ({ token: req.headers.authorization }),
+        context: context,
     })
   );
   (async () => {

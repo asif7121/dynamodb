@@ -8,6 +8,19 @@ export const typeDefs = `#graphql
     createdAt: String
     updatedAt: String
   }
+type JwtToken {
+  token: String
+}
+type UserWithToken {
+    id: ID!
+    username: String!
+    email: String!
+    password: String!
+    isActive: Boolean!
+    createdAt: String
+    updatedAt: String
+    authToken: JwtToken
+}
   type Product {
     id: ID!
     name: String!
@@ -30,11 +43,12 @@ export const typeDefs = `#graphql
     createdAt: String
     updatedAt: String
   }
+  union UserData = User | UserWithToken
   type UserResponse {
   statusCode: Int
   message: String
   error: String
-  data: User
+  data: UserData
 }
   type ProductResponse {
     statusCode: Int
@@ -52,6 +66,10 @@ export const typeDefs = `#graphql
     id: ID!
     quantity: Int!
   }
+  input LoginInput {
+    email: String!
+    password: String!
+  }
   type Query {
     getAllUsers: [User]
     getUser(id:String!): UserResponse
@@ -61,6 +79,7 @@ export const typeDefs = `#graphql
   }
   type Mutation {
     addUser(username: String!, email: String!, password: String!):UserResponse
+    loginUser(input: LoginInput!): UserResponse
     createProduct(name:String!, price:Int!,stock:Int!, userId:String!): ProductResponse
     orderProducts(products:[OrderedProduct!]!, userId: String):OrderResponse 
   }
