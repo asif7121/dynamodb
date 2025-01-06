@@ -1,4 +1,4 @@
-import { addUser } from "../../module/auth/controller/index.js";
+import { addUser, loginUser } from "../../module/auth/controller/index.js";
 import { getAllUsers } from "../../module/me/controller/getAllUsers.js";
 import { getUser } from "../../module/me/controller/getUser.js";
 import {
@@ -25,6 +25,7 @@ export const resolvers = {
   },
   Mutation: {
     addUser: addUser,
+    loginUser: loginUser,
     createProduct: createProduct,
     orderProducts: orderProducts,
   },
@@ -41,8 +42,15 @@ export const resolvers = {
     },
     items: async (order) => {
       const { data } = await getOrderedProducts(order.items);
-      console.log(data);
       return data;
     },
   },
-}
+  UserData: {
+    __resolveType(obj) {
+      if (obj.authToken) {
+        return "UserWithToken";
+      }
+      return "User";
+    },
+  },
+};
