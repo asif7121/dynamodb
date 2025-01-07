@@ -1,14 +1,27 @@
-import { dynamoDB, marshall, unmarshall } from "../../../../db.js";
-import bcrypt from "bcrypt";
-import { generateToken } from "../../../middleware/generateToken.js";
+import { dynamoDB, marshall, unmarshall } from "../../../db.js";
+import { generateToken, hashPassword, verifyPassword } from "../../core/utils.js";
 
-export const addUser = async (_, args) => {
+export const addUser = async (_, { username, email, password }) => {
+  const existingUser = await dynamoDB
+    .query({
+      TableName: "Users",
+      IndexName: "email",
+      KeyConditionExpression: "email = :email",
+      ExpressionAttributeValues: marshall({
+        ":email": email,
+      }),
+    })
+    .promise();
+  if (existingUser.Items.length) {
+    return { statusCode: 403, error: "User already exist." };
+  }
   const id = Math.floor(Math.random() * 1000000 * 100).toString();
+  const hashedPassword = await hashPassword(password);
   const item = marshall({
     id,
-    username: args.username,
-    email: args.email,
-    password: bcrypt.hashSync(args.password, 10),
+    username,
+    email,
+    password: hashedPassword,
     isActive: true,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -19,11 +32,11 @@ export const addUser = async (_, args) => {
       Item: item,
     })
     .promise();
-  const token = await generateToken( { id } )
+  const token = await generateToken(unmarshall(item));
   const response = {
-    ...unmarshall( item ),
-    authToken: {token}
-  }
+    ...unmarshall(item),
+    authToken: token,
+  };
   return {
     statusCode: 201,
     message: "User created successfully.",
@@ -32,7 +45,7 @@ export const addUser = async (_, args) => {
 };
 
 
-export const loginUser = async (_, { input: { email, password } }) => {
+export const loginUser = async (_, { email, password }) => {
   try {
     // Query user by email using the GSI
     const result = await dynamoDB
@@ -57,7 +70,7 @@ export const loginUser = async (_, { input: { email, password } }) => {
     const user = unmarshall(result.Items[0]);
 
     // Compare password
-    const isValidPassword = bcrypt.compareSync(password, user.password);
+    const isValidPassword = verifyPassword(password, user.password)
     if (!isValidPassword) {
       return {
         statusCode: 401,
@@ -65,13 +78,12 @@ export const loginUser = async (_, { input: { email, password } }) => {
         error: "Invalid email or password.",
       };
     }
-
     // Generate token
-    const token = await generateToken({ id: user.id });
+    const token = await generateToken(user);
 
     const response = {
       ...user,
-      authToken: { token },
+      authToken:token,
     };
 
     return {

@@ -5,7 +5,6 @@ import { listTables } from "./db.js";
 import { typeDefs } from "./src/graphql/schema/schema.js";
 import { resolvers } from "./src/graphql/resolver/resolver.js";
 import dotenv from 'dotenv'
-import { context } from "./src/graphql/context/context.js";
 dotenv.config({path: './.env'})
 
 async function startServer() {
@@ -14,7 +13,6 @@ async function startServer() {
   const server = new ApolloServer({
     typeDefs: typeDefs,
     resolvers: resolvers,
-    introspection: true
   });
 
   // Start the server
@@ -25,7 +23,10 @@ async function startServer() {
   app.use(
     "/graphql",
     expressMiddleware(server, {
-        context: context,
+      context: async ({ req }) => {
+        // Pass the request object to the context
+        return { req };
+      },
     })
   );
   (async () => {

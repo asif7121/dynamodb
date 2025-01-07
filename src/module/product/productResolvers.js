@@ -1,34 +1,38 @@
-import { dynamoDB, marshall, unmarshall } from "../../../../db.js";
+import { dynamoDB, marshall, unmarshall } from "../../../db.js";
+import { authMiddleware } from "../auth/authMiddleware.js";
 
-export const createProduct = async (_, { name, price, stock, userId }) => {
-  try {
-    const id = Math.floor(Math.random() * 1000000 * 100).toString();
-    const item = marshall({
-      id,
-      name,
-      price,
-      stock,
-      createdBy: userId,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    });
-    await dynamoDB
-      .putItem({
-        TableName: "Products",
-        Item: item,
-      })
-      .promise();
-    return {
-      statusCode: 201,
-      message: "Product created successfully.",
-    };
-  } catch (error) {
-    console.log(error);
-    return { statusCode: 500, error: error.message };
+export const createProduct = authMiddleware(
+  async (_, { name, price, stock }, context) => {
+    try {
+      const user = context.user;
+      const id = Math.floor(Math.random() * 1000000 * 100).toString();
+      const item = marshall({
+        id,
+        name,
+        price,
+        stock,
+        createdBy: user.id,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+      await dynamoDB
+        .putItem({
+          TableName: "Products",
+          Item: item,
+        })
+        .promise();
+      return {
+        statusCode: 201,
+        message: "Product created successfully.",
+      };
+    } catch (error) {
+      console.log(error);
+      return { statusCode: 500, error: error.message };
+    }
   }
-};
+);
 
-export const getAllProducts = async () => {
+export const getAllProducts = authMiddleware(async (_,{},context) => {
   try {
     // Get table information
     const tableDetails = await dynamoDB
@@ -73,14 +77,14 @@ export const getAllProducts = async () => {
     console.log(error);
     return { statusCode: 500, error: error.message };
   }
-};
+});
 
-export const getProduct = async (_, { id }) => {
+export const getProduct = authMiddleware(async (_, { id }, context) => {
   try {
     const product = await dynamoDB
       .getItem({
         TableName: "Products",
-        Key: { id: { S: id } },
+        Key: marshall({ id: id }),
       })
       .promise();
     if (!product.Item) {
@@ -95,9 +99,9 @@ export const getProduct = async (_, { id }) => {
     console.log(error);
     return { statusCode: 500, error: error.message };
   }
-};
+});
 
-export const getProductOwner = async (userId) => {
+export const getProductOwner = authMiddleware(async (userId,{},context) => {
   try {
     const user = await dynamoDB
       .getItem({
@@ -112,4 +116,4 @@ export const getProductOwner = async (userId) => {
     console.log(error);
     return { statusCode: 500, error: error.message };
   }
-};
+});
