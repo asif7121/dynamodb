@@ -1,18 +1,8 @@
-import { addUser, loginUser } from "../../module/auth/controller/index.js";
-import { getAllUsers } from "../../module/me/controller/getAllUsers.js";
-import { getUser } from "../../module/me/controller/getUser.js";
-import {
-  getAllOrders,
-  getConsumer,
-  getOrderedProducts,
-  orderProducts,
-} from "../../module/order/controller/index.js";
-import {
-  createProduct,
-  getAllProducts,
-  getProduct,
-  getProductOwner,
-} from "../../module/product/controller/index.js";
+import { addUser, loginUser } from "../../module/auth/authResolvers.js";
+import { getAllUsers, getUser } from "../../module/me/userResolvers.js";
+import { getAllOrders, getConsumer, getOrderedProducts, orderProducts } from "../../module/order/orderResolvers.js";
+import { createProduct, getAllProducts, getProduct, getProductOwner } from "../../module/product/productResolvers.js";
+
 
 // Define resolvers
 export const resolvers = {
@@ -43,14 +33,6 @@ export const resolvers = {
     items: async (order) => {
       const { data } = await getOrderedProducts(order.items);
       return data;
-    },
-  },
-  UserData: {
-    __resolveType(obj) {
-      if (obj.authToken) {
-        return "UserWithToken";
-      }
-      return "User";
     },
   },
 };
